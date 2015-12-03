@@ -29,12 +29,24 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>\\ntsql\PROGRAMACAO\EXES\Planeamento Teste\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="SGCE">
+      <HintPath>\\Ntsql\programacao\EXES\SGCE-Release-DLL\SGCE.exe</HintPath>
+    </Reference>
+    <Reference Include="SGCEBL">
+      <HintPath>\\Ntsql\programacao\EXES\SGCE-Release-DLL\SGCEBL.dll</HintPath>
+    </Reference>
+    <Reference Include="SGCEBO">
+      <HintPath>\\Ntsql\programacao\EXES\SGCE-Release-DLL\SGCEBO.dll</HintPath>
+    </Reference>
+    <Reference Include="SGCEDAO">
+      <HintPath>\\Ntsql\programacao\EXES\SGCE-Release-DLL\SGCEDAO.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -55,6 +67,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Selection.cs" />
     <Page Include="Calendar.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -70,12 +83,14 @@
     <Compile Include="Calendar.xaml.cs">
       <DependentUpon>Calendar.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Machine.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ProductOrder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

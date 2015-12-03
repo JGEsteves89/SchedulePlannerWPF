@@ -1,12 +1,98 @@
-﻿<UserControl x:Class="WpfApplication1.Calendar"
+﻿<UserControl x:Class="SchedulePlannerWPF.Calendar"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:WpfApplication1"
+             xmlns:local="clr-namespace:SchedulePlannerWPF"
              mc:Ignorable="d" Height="325.424" Width="499.032" Loaded="UserControl_Loaded" MouseWheel="UserControl_MouseWheel" SizeChanged="UserControl_SizeChanged">
+    <UserControl.Resources>
+        <Storyboard x:Key="OnMouseEnter1">
+            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Background).(SolidColorBrush.Color)" Storyboard.TargetName="textBlock">
+                <EasingColorKeyFrame KeyTime="0" Value="#4CFFFFFF"/>
+            </ColorAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="OnMouseEnter2">
+            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Background).(SolidColorBrush.Color)" Storyboard.TargetName="textBlock1">
+                <EasingColorKeyFrame KeyTime="0" Value="#4CFFFFFF"/>
+            </ColorAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="CalendarDown">
+            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="dockPanel1">
+                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+            </ObjectAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.Y)" Storyboard.TargetName="dockPanel1">
+                <EasingDoubleKeyFrame KeyTime="0" Value="-200"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.4" Value="0">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <ExponentialEase EasingMode="EaseIn"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="CalendarUp">
+            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Visibility)" Storyboard.TargetName="dockPanel1">
+                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}"/>
+                <DiscreteObjectKeyFrame KeyTime="0:0:0.4" Value="{x:Static Visibility.Hidden}"/>
+            </ObjectAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.Y)" Storyboard.TargetName="dockPanel1">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <ExponentialEase EasingMode="EaseOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.4" Value="-200">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <ExponentialEase EasingMode="EaseOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="OnMouseEnter3">
+            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Background).(SolidColorBrush.Color)" Storyboard.TargetName="textfinit">
+                <EasingColorKeyFrame KeyTime="0" Value="#4CFFFFFF"/>
+            </ColorAnimationUsingKeyFrames>
+            <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Background).(SolidColorBrush.Color)" Storyboard.TargetName="textinit">
+                <EasingColorKeyFrame KeyTime="0" Value="#4CFFFFFF"/>
+            </ColorAnimationUsingKeyFrames>
+        </Storyboard>
+    </UserControl.Resources>
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="UIElement.MouseEnter" SourceName="textBlock">
+            <BeginStoryboard x:Name="OnMouseEnter1_BeginStoryboard" Storyboard="{StaticResource OnMouseEnter1}"/>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="UIElement.MouseLeave" SourceName="textBlock">
+            <StopStoryboard BeginStoryboardName="OnMouseEnter1_BeginStoryboard"/>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="UIElement.MouseEnter" SourceName="textBlock1">
+            <BeginStoryboard x:Name="OnMouseEnter2_BeginStoryboard" Storyboard="{StaticResource OnMouseEnter2}"/>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="UIElement.MouseLeave" SourceName="textBlock1">
+            <StopStoryboard BeginStoryboardName="OnMouseEnter2_BeginStoryboard"/>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="UIElement.MouseLeftButtonDown" SourceName="textinit">
+            <BeginStoryboard x:Name="CalendarDown_BeginStoryboard" Storyboard="{StaticResource CalendarDown}"/>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="UIElement.MouseLeftButtonDown" SourceName="textfinit">
+            <BeginStoryboard x:Name="CalendarDown_BeginStoryboard1" Storyboard="{StaticResource CalendarDown}"/>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="UIElement.MouseLeave" SourceName="dockPanel1">
+            <BeginStoryboard x:Name="CalendarUp_BeginStoryboard" Storyboard="{StaticResource CalendarUp}"/>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="UIElement.MouseEnter" SourceName="textinit">
+            <BeginStoryboard x:Name="OnMouseEnter3_BeginStoryboard" Storyboard="{StaticResource OnMouseEnter3}"/>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="UIElement.MouseLeave" SourceName="textinit">
+            <StopStoryboard BeginStoryboardName="OnMouseEnter3_BeginStoryboard"/>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="UIElement.MouseEnter" SourceName="textfinit">
+            <BeginStoryboard x:Name="OnMouseEnter4_BeginStoryboard" Storyboard="{StaticResource OnMouseEnter3}"/>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="UIElement.MouseLeave" SourceName="textfinit">
+            <StopStoryboard BeginStoryboardName="OnMouseEnter3_BeginStoryboard"/>
+        </EventTrigger>
+    </UserControl.Triggers>
     <Grid>
-        <DockPanel Height="25" LastChildFill="False" VerticalAlignment="Top">
+        <DockPanel x:Name="dockPanel" Height="25" LastChildFill="False" VerticalAlignment="Top" MouseRightButtonDown="DockPanel_MouseRightButtonDown">
             <DockPanel.Background>
                 <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0" SpreadMethod="Reflect">
                     <GradientStop Color="#FFAAAAAA" Offset="0"/>
@@ -16,11 +102,35 @@
                     <GradientStop Color="#FFC1C1C1" Offset="0.948"/>
                 </LinearGradientBrush>
             </DockPanel.Background>
-            <TextBlock x:Name="textBlock" TextWrapping="Wrap" Text="01-02 Dezembro, 2015" DockPanel.Dock="Top" Height="20" TextAlignment="Center" FontSize="16" FontFamily="Source Sans Pro" Margin="82,0,0,0"/>
+            <DockPanel HorizontalAlignment="Left" VerticalAlignment="Center" DockPanel.Dock="Right">
+                <TextBlock x:Name="textBlock1" FontFamily="Source Sans Pro Light" FontSize="18.667" Text=" &gt;" MouseDown="TextBlock_MouseDown" Background="#00000000"/>
+            </DockPanel>
+            <DockPanel HorizontalAlignment="Left" VerticalAlignment="Center" DockPanel.Dock="Right">
+                <TextBlock x:Name="textfinit" FontFamily="Source Sans Pro Light" FontSize="18.667" Text=" - 01 Janeiro 2016" Background="#00000000"/>
+            </DockPanel>
+            <DockPanel HorizontalAlignment="Left" VerticalAlignment="Center" DockPanel.Dock="Right">
+                <TextBlock x:Name="textinit" FontFamily="Source Sans Pro Light" FontSize="18.667" Text="03 Dezembro 2015" Background="#00000000"/>
+            </DockPanel>
+            <DockPanel HorizontalAlignment="Left" VerticalAlignment="Center" DockPanel.Dock="Right">
+                <TextBlock x:Name="textBlock" FontFamily="Source Sans Pro Light" FontSize="18.667" Text="&lt; " MouseDown="TextBlock_MouseDown_1" MouseEnter="textBlock_MouseEnter" Background="#00000000"/>
+            </DockPanel>
         </DockPanel>
         <Canvas x:Name="PanelCalendar" Margin="81,25,0,92" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"/>
-        <DockPanel x:Name="PanelMac" HorizontalAlignment="Left" LastChildFill="False" Width="81" Background="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Margin="0,25,0,92"/>
-        <Canvas x:Name="PanelOverView" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Height="92" VerticalAlignment="Bottom"/>
+        <DockPanel x:Name="PanelMac" HorizontalAlignment="Left" LastChildFill="False" Width="81" Background="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Margin="0,25,0,92">
+            <Button x:Name="button" Content="AdicionarTonto" Height="26" VerticalAlignment="Top" Margin="0,17,0,0" DockPanel.Dock="Top" Click="button_Click"/>
+        </DockPanel>
+        <Canvas x:Name="PanelOverView" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Height="92" VerticalAlignment="Bottom" MouseDown="PanelOverView_MouseDown" MouseMove="PanelOverView_MouseMove"/>
+        <DockPanel x:Name="dockPanel1" LastChildFill="False" Background="#FFD6D6D6" Opacity="0.8" RenderTransformOrigin="0.5,0.5" HorizontalAlignment="Right" Width="295.758" Height="201.262" VerticalAlignment="Top" Visibility="Hidden">
+            <DockPanel.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </DockPanel.RenderTransform>
+            <Calendar x:Name="AuxCalendar" Margin="1.066,0,-0.934,0" Width="295.626" DockPanel.Dock="Right" Height="174.046" VerticalAlignment="Bottom" HorizontalAlignment="Left" d:LayoutOverrides="Width" SelectionMode="SingleRange" SelectedDatesChanged="Calendar_SelectedDatesChanged"/>
+        </DockPanel>
 
     </Grid>
 </UserControl>
