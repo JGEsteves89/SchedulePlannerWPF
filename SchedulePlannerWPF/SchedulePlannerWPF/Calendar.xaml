@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:SchedulePlannerWPF"
-             mc:Ignorable="d" Height="325.424" Width="499.032" Loaded="UserControl_Loaded" MouseWheel="UserControl_MouseWheel" SizeChanged="UserControl_SizeChanged">
+             mc:Ignorable="d" Height="325.424" Width="499.032" Loaded="UserControl_Loaded" MouseWheel="UserControl_MouseWheel" SizeChanged="UserControl_SizeChanged" MouseDown="UserControl_MouseDown">
     <UserControl.Resources>
         <Storyboard x:Key="OnMouseEnter1">
             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Background).(SolidColorBrush.Color)" Storyboard.TargetName="textBlock">
@@ -117,9 +117,11 @@
         </DockPanel>
         <Canvas x:Name="PanelCalendar" Margin="81,25,0,92" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"/>
         <DockPanel x:Name="PanelMac" HorizontalAlignment="Left" LastChildFill="False" Width="81" Background="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Margin="0,25,0,92">
-            <Button x:Name="button" Content="AdicionarTonto" Height="26" VerticalAlignment="Top" Margin="0,17,0,0" DockPanel.Dock="Top" Click="button_Click"/>
+            <Button x:Name="button" Content="AdicionarTonto" Height="26" VerticalAlignment="Top" Margin="0,17,0,0" DockPanel.Dock="Bottom" Click="button_Click"/>
         </DockPanel>
         <Canvas x:Name="PanelOverView" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Height="92" VerticalAlignment="Bottom" MouseDown="PanelOverView_MouseDown" MouseMove="PanelOverView_MouseMove"/>
+
+        <Canvas x:Name="PanelItems"/>
         <DockPanel x:Name="dockPanel1" LastChildFill="False" Background="#FFD6D6D6" Opacity="0.8" RenderTransformOrigin="0.5,0.5" HorizontalAlignment="Right" Width="295.758" Height="201.262" VerticalAlignment="Top" Visibility="Hidden">
             <DockPanel.RenderTransform>
                 <TransformGroup>

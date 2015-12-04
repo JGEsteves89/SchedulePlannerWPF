@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace SchedulePlannerWPF {
     public class Selection {
@@ -17,21 +19,18 @@ namespace SchedulePlannerWPF {
             item.IsSelected = true;
             Items.Add(item);
             HasSelection = true;
-            Parent.oRefresh();
         }
         public void Remove(ProductOrder item) {
             item.IsSelected = false;
             Items.Remove(item);
             if (Items.Count == 0) HasSelection = false;
             else HasSelection = true;
-            Parent.oRefresh();
         }
         public void RemoveAt(int index) {
             Items[index].IsSelected = false;
             Items.RemoveAt(index);
             if (Items.Count == 0) HasSelection = false;
             else HasSelection = true;
-            Parent.oRefresh();
         }
         public void Clear() {
             foreach (ProductOrder item in Items) {
@@ -40,7 +39,22 @@ namespace SchedulePlannerWPF {
             Items.Clear();
             HasSelection = false;
             IsMoving = false;
-            Parent.oRefresh();
+        }
+
+        internal void Move(Point point) {
+            double StackPos = 0;
+            foreach (ProductOrder item in Items) {
+                double MacPostion = point.Y;
+                foreach (Machine iMac in Parent.Machines) {
+                    if (point.Y > Canvas.GetTop( iMac.DrawnRect) &&  point.Y < Canvas.GetTop(iMac.DrawnRect)+iMac.DrawnRect.Height) {
+                        MacPostion = Canvas.GetTop(iMac.DrawnRect) + Parent.ItemSlack;
+                        break;
+                    }
+                }
+                Canvas.SetTop(item.DrawnRect, MacPostion);
+                Canvas.SetLeft(item.DrawnRect, point.X + StackPos);
+                StackPos += item.DrawnRect.Width;
+            }
         }
     }
 }

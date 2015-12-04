@@ -21,6 +21,7 @@ namespace SchedulePlannerWPF {
     public partial class Calendar : UserControl {
         public Calendar() {
             InitializeComponent();
+            oSel = new Selection(this);
             System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
             dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
@@ -44,11 +45,11 @@ namespace SchedulePlannerWPF {
         private int DayHeaderSize = 30;
         private int HourHeaderSize = 0;
         private int MachineHeaderHeight = 60;
-        private int ItemSlack = 3;
+        public int ItemSlack = 3;
         private double viewPortX = 0;
         private double viewPortWith {
             get {
-                if (double.IsNaN(PanelCalendar.ActualWidth)|| PanelCalendar.ActualWidth==0) return 418;
+                if (double.IsNaN(PanelCalendar.ActualWidth) || PanelCalendar.ActualWidth == 0) return 418;
                 else return PanelCalendar.ActualWidth;
             }
         }
@@ -207,7 +208,7 @@ namespace SchedulePlannerWPF {
                 viewPortX = (int)((double)viewPortX * (AfterSize / BeforeSize));
                 viewPortX = viewPortX - (int)(eGetPositionPanelCalendar.X);
                 if (viewPortX < 0) viewPortX = 0;
-                if (Math.Round(AfterSize,0) < Math.Round(viewPortWith, 0)) {
+                if (Math.Round(AfterSize, 0) < Math.Round(viewPortWith, 0)) {
                     viewPortX = 0;
                     double TimeWindow = EndDate.Subtract(StartDate).Ticks;
                     double SpectedPixelTick = viewPortWith / TimeWindow;
@@ -219,19 +220,19 @@ namespace SchedulePlannerWPF {
             }
         }
 
-        private double tickPixel= 0.00000000011574074074;
+        private double tickPixel = 0.00000000011574074074;
         public double TickPixel {
-            get { return tickPixel* zoom; }
+            get { return tickPixel * zoom; }
             set { tickPixel = value; oRefresh(); }
         }
 
-        public Selection oSel;
+        public Selection oSel ;
         public List<Machine> Machines = new List<Machine>();
 
         public void oRefresh() {
             RefreshPanelCalendar();
-            RefreshPanelCalendarItems();
             RefreshPanelOverView();
+            RefreshPanelItems();
             RefreshTimeLine();
         }
         public void RefreshPanelCalendar() {
@@ -256,7 +257,7 @@ namespace SchedulePlannerWPF {
                 if ((Xt >= 0 && Xt <= 0 + viewPortWith) || ((Xt < 0 && Xf >= 0))) {
                     PanelCalendar.Children.Add(CreateFrameDivision(Xt, DayHeaderSize, TickPixel * MedlDiv, TempHeight, 1, Colors.LightGray));
                     PanelCalendar.Children.Add(CreateFrameLine(Xt, DayHeaderSize,0, TempHeight, 10,2, Colors.LightGray));
-                    PanelCalendar.Children.Add(CrateTextBlock(Xt, DayHeaderSize - 15, text, "Source Sans Pro Light,12"));
+                    PanelCalendar.Children.Add(CrateTextBlock(Xt, DayHeaderSize - 15, text, "Source Sans Pro Light,12",Colors.Black));
                 } 
             }
             for (int i = 0; i < TimeWindow / HighDiv; i++) {
@@ -267,66 +268,7 @@ namespace SchedulePlannerWPF {
                 double Xt1 = (double)((double)Xt + ((double)Xf - (double)Xt) / (double)2);
                 if ((Xt >= 0 && Xt <= 0 + viewPortWith) || ((Xt < 0 && Xf >= 0))) {
                     PanelCalendar.Children.Add(CreateFrameDivision(Xt, 0, TickPixel * HighDiv, TempHeight, 2, Colors.Gray));
-                    PanelCalendar.Children.Add(CrateTextBlock(Xt1, 3, text, "Source Sans Pro Light,14"));
-                }
-            }
-        }
-
-        private void dispatcherTimer_Tick(object sender, EventArgs e) {
-            RefreshTimeLine();
-        }
-        public void RefreshTimeLine() {
-            if (DateTime.Now >= StartDate || DateTime.Now <= EndDate) {
-                long TimeWindow = EndDate.Subtract(StartDate).Ticks;
-                long TimeNow = DateTime.Now.Subtract(StartDate).Ticks;
-                double MyTickPixel = ((double)PanelOverView.ActualWidth / (double)TimeWindow);
-                double TempHeightPanelCalendar = 91;
-                if (PanelCalendar.ActualHeight != 0) TempHeightPanelCalendar = PanelMac.ActualHeight;
-                double TempHeightPanelOverView = 91;
-                if (PanelOverView.ActualHeight != 0) TempHeightPanelOverView = PanelOverView.ActualHeight;
-                double PosNow = ((double)TickPixel * (double)TimeNow) - viewPortX;
-                if ((PosNow >= 0 && PosNow <= 0 + viewPortWith)) {
-                    TimeLine1 = CreateFrameLine(PosNow, 0, 0, TempHeightPanelCalendar, 0, 3, Colors.Red);
-                    TimeLine1.Name = "TimeLine1";
-                    if (((Shape)PanelCalendar.Children[PanelCalendar.Children.Count - 1]).Name == TimeLine1.Name) {
-                        PanelCalendar.Children.RemoveAt(PanelCalendar.Children.Count - 1);
-                    }
-                    PanelCalendar.Children.Add(TimeLine1);
-                }
-                PosNow = ((double)MyTickPixel * (double)TimeNow);
-                if ((PosNow >= 0 && PosNow <= 0 + TimeWindow * MyTickPixel)) {
-                    TimeLine2 = CreateFrameLine(PosNow, 0, 0, TempHeightPanelOverView, 0, 3, Colors.Red);
-                    TimeLine2.Name = "TimeLine2";
-                    if (((Shape)PanelOverView.Children[PanelOverView.Children.Count - 1]).Name == TimeLine2.Name) {
-                        PanelOverView.Children.RemoveAt(PanelOverView.Children.Count - 1);
-                    }
-                    PanelOverView.Children.Add(TimeLine2);
-                }
-            }
-        }
-        public void RefreshPanelCalendarItems() {
-            for (int i = 0; i < Machines.Count; i++) {
-                double y0= (i) * MachineHeaderHeight + DayHeaderSize + HourHeaderSize;
-                double yt = (i+1) * MachineHeaderHeight+ DayHeaderSize + HourHeaderSize;
-
-                Machines[i].DrawnRect = CreateFrameDivision(0, yt, viewPortWith, yt + MachineHeaderHeight, 1, Colors.DimGray);
-                Line Line1= CreateFrameLine(0, yt, viewPortWith, 0 ,0, 2, Colors.DimGray);
-                PanelCalendar.Children.Add(Line1);
-                if (i == 0) {
-                    Line Line0 = CreateFrameLine(0, y0, viewPortWith, 0, 0, 2, Colors.DimGray);
-                    PanelCalendar.Children.Add(Line0);
-                }
-                for (int po = 0; po < Machines[i].Ordens.Count; po++) {
-                    double Posi = Machines[i].Ordens[po].DateStart.Subtract(StartDate).Ticks * TickPixel - viewPortX;
-                    double Posf = Machines[i].Ordens[po].DateEnd.Subtract(StartDate).Ticks * TickPixel - viewPortX;
-                    if ((Posi >= 0 && Posi <= 0 + viewPortWith) || ((Posi < 0 && Posf >= 0))) {
-                        Machines[i].Ordens[po].DrawnRect = CreateFrameDivision(Posi, y0 + ItemSlack, Posf - Posi, yt - ItemSlack, 2, Colors.DimGray);
-                        Machines[i].Ordens[po].DrawnRect.Fill = new SolidColorBrush(Color.FromArgb(85, Colors.DimGray.R, Colors.DimGray.G, Colors.DimGray.B));
-                        Machines[i].Ordens[po].DrawnRect.MouseEnter += new MouseEventHandler(Item_MouseEnter);
-                        Machines[i].Ordens[po].DrawnRect.MouseLeave += new MouseEventHandler(Item_MouseLeave);
-                        Machines[i].Ordens[po].DrawnRect.ToolTip = string.Format("{0}\nTipo: {2}\nEquipamento: {1}", Machines[i].Ordens[po].Text, Machines[i].Ordens[po].Equipamento, Machines[i].Ordens[po].GetState());
-                        PanelCalendar.Children.Add(Machines[i].Ordens[po].DrawnRect);
-                    }
+                    PanelCalendar.Children.Add(CrateTextBlock(Xt1, 3, text, "Source Sans Pro Light,14", Colors.Black));
                 }
             }
         }
@@ -354,7 +296,7 @@ namespace SchedulePlannerWPF {
                 int Xf = Xt + (int)((double)(MyTickPixel * MyMedlDiv));
                 PanelOverView.Children.Add(CreateFrameDivision(Xt, DayHeaderSize, MyTickPixel * MyMedlDiv, TempHeight, 1, Colors.LightGray));
                 PanelOverView.Children.Add(CreateFrameLine(Xt, DayHeaderSize,0, MyMedlDiv, 10,2, Colors.LightGray));
-                PanelOverView.Children.Add(CrateTextBlock(Xt, DayHeaderSize - 15, text, "Source Sans Pro Light,10"));
+                PanelOverView.Children.Add(CrateTextBlock(Xt, DayHeaderSize - 15, text, "Source Sans Pro Light,10", Colors.Black));
             }
             for (int i = 0; i < TimeWindow / MyHighDiv; i++) {
                 DateTime Cur = StartDate.Add(new TimeSpan((long)((double)i * ((double)MyHighDiv))));
@@ -363,7 +305,7 @@ namespace SchedulePlannerWPF {
                 int Xf = Xt + (int)((double)(MyTickPixel * MyHighDiv));
                 int Xt1 = (int)((double)Xt + ((double)Xf - (double)Xt) / (double)2);
                 PanelOverView.Children.Add(CreateFrameDivision(Xt, 0, MyTickPixel * MyHighDiv, TempHeight, 2, Colors.Gray));
-                PanelOverView.Children.Add(CrateTextBlock(Xt1, 3, text, "Source Sans Pro Light,12"));
+                PanelOverView.Children.Add(CrateTextBlock(Xt1, 3, text, "Source Sans Pro Light,12", Colors.Black));
             }
 
             for (int i = 0; i < Machines.Count; i++) {
@@ -388,9 +330,6 @@ namespace SchedulePlannerWPF {
                     }
                 }
             }
-
-
-
             double ActuaPos = (double)((double)viewPortX * ((double)MyTickPixel / (double)TickPixel));
             double ActuaWid = (double)((double)viewPortWith * ((double)MyTickPixel / (double)TickPixel));
 
@@ -399,18 +338,98 @@ namespace SchedulePlannerWPF {
             ViewPort.Opacity = 0.5;
             PanelOverView.Children.Add(ViewPort);
         }
+        public void RefreshPanelItems() {
+            PanelItems.Children.Clear();
+            for (int i = 0; i < Machines.Count; i++) {
+                double y0 = PanelCalendar.Margin.Top + (i) * MachineHeaderHeight + DayHeaderSize + HourHeaderSize;
+                double yt = PanelCalendar.Margin.Top + (i + 1) * MachineHeaderHeight + DayHeaderSize + HourHeaderSize;
+                double x0 = PanelCalendar.Margin.Left;
+                double xt = 0;
+                if (double.IsNaN(y0)) return;
+
+                Machines[i].DrawnRect = CreateFrameDivision(x0, y0, viewPortWith, y0 + MachineHeaderHeight, 1, Colors.DimGray);
+                Line Line1 = CreateFrameLine(x0, yt, viewPortWith, 0, 0, 2, Colors.DimGray);
+                PanelItems.Children.Add(Line1);
+                if (i == 0) {
+                    Line Line0 = CreateFrameLine(x0, y0, viewPortWith, 0, 0, 2, Colors.DimGray);
+                    PanelItems.Children.Add(Line0);
+                }
+                for (int po = 0; po < Machines[i].Ordens.Count; po++) {
+                    double Posi = Machines[i].Ordens[po].DateStart.Subtract(StartDate).Ticks * TickPixel - viewPortX;
+                    double Posf = Machines[i].Ordens[po].DateEnd.Subtract(StartDate).Ticks * TickPixel - viewPortX;
+                    if ((Posi >= 0 && Posi <= 0 + viewPortWith) || ((Posi < 0 && Posf >= 0))) {
+                        Machines[i].Ordens[po].DrawnRect = CreateFrameDivision(x0 + Posi, y0 + ItemSlack, Posf - Posi, yt - ItemSlack, 2, Colors.DimGray);
+                        Machines[i].Ordens[po].DrawnRect.Fill = new SolidColorBrush(Color.FromArgb(85, Colors.DimGray.R, Colors.DimGray.G, Colors.DimGray.B));
+                        Machines[i].Ordens[po].DrawnRect.MouseEnter += new MouseEventHandler(Item_MouseEnter);
+                        Machines[i].Ordens[po].DrawnRect.MouseLeave += new MouseEventHandler(Item_MouseLeave);
+                        Machines[i].Ordens[po].DrawnRect.MouseLeftButtonDown += new MouseButtonEventHandler(Item_MouseLeftButtonDown);
+                        Machines[i].Ordens[po].DrawnRect.MouseLeftButtonUp += new MouseButtonEventHandler(Item_MouseLeftButtonUp);
+                        Machines[i].Ordens[po].DrawnRect.ToolTip = string.Format("{0}\nTipo: {2}\nEquipamento: {1}", Machines[i].Ordens[po].Text, Machines[i].Ordens[po].Equipamento, Machines[i].Ordens[po].GetState());
+                        Machines[i].Ordens[po].DrawnRect.Name = Machines[i].Ordens[po].ItemID;
+                        if (Machines[i].Ordens[po].IsSelected)
+                            Machines[i].Ordens[po].DrawnRect.StrokeThickness = 4;
+                        PanelItems.Children.Add(Machines[i].Ordens[po].DrawnRect);
+                    }
+                }
+                y0 = PanelCalendar.Margin.Top + (i) * MachineHeaderHeight + DayHeaderSize + HourHeaderSize;
+                yt = PanelCalendar.Margin.Top + (i + 1) * MachineHeaderHeight + DayHeaderSize + HourHeaderSize;
+                x0 = PanelMac.ActualWidth/2;
+                xt = 0;
+                PanelItems.Children.Add(CrateTextBlock(x0, y0 + (yt - y0) / 2, Machines[i].Name, "Source Sans Pro Semibold,12", Colors.White));
+
+            }
+        }
+        public void RefreshTimeLine() {
+            if (DateTime.Now >= StartDate || DateTime.Now <= EndDate) {
+                long TimeWindow = EndDate.Subtract(StartDate).Ticks;
+                long TimeNow = DateTime.Now.Subtract(StartDate).Ticks;
+                double MyTickPixel = ((double)PanelOverView.ActualWidth / (double)TimeWindow);
+                double TempHeightPanelCalendar = 91;
+                if (PanelCalendar.ActualHeight != 0) TempHeightPanelCalendar = PanelMac.ActualHeight;
+                double TempHeightPanelOverView = 91;
+                if (PanelOverView.ActualHeight != 0) TempHeightPanelOverView = PanelOverView.ActualHeight;
+                double PosNow = ((double)TickPixel * (double)TimeNow) - viewPortX;
+                if ((PosNow >= 0 && PosNow <= 0 + viewPortWith)) {
+                    TimeLine1 = CreateFrameLine(PosNow, 0, 0, TempHeightPanelCalendar, 0, 3, Colors.Red);
+                    TimeLine1.Name = "TimeLine1";
+
+                    try {
+                        if (((Shape)PanelCalendar.Children[PanelCalendar.Children.Count - 1]).Name == TimeLine1.Name) {
+                            PanelCalendar.Children.RemoveAt(PanelCalendar.Children.Count - 1);
+                        }
+                    } catch (Exception) { }
+
+                    PanelCalendar.Children.Add(TimeLine1);
+                }
+                PosNow = ((double)MyTickPixel * (double)TimeNow);
+                if ((PosNow >= 0 && PosNow <= 0 + TimeWindow * MyTickPixel)) {
+                    TimeLine2 = CreateFrameLine(PosNow, 0, 0, TempHeightPanelOverView, 0, 3, Colors.Red);
+                    TimeLine2.Name = "TimeLine2";
+
+                    try {
+                        if (((Shape)PanelOverView.Children[PanelOverView.Children.Count - 1]).Name == TimeLine2.Name) {
+                            PanelOverView.Children.RemoveAt(PanelOverView.Children.Count - 1);
+                        }
+                    } catch (Exception) { }
+                    PanelOverView.Children.Add(TimeLine2);
+                }
+            }
+        }
+        private void dispatcherTimer_Tick(object sender, EventArgs e) {
+            RefreshTimeLine();
+        }
+    
 
 
-
-
-        private TextBlock CrateTextBlock(double x, double y,string text, string Font) {
+        private TextBlock CrateTextBlock(double x, double y,string text, string Font,Color iColor) {
             TextBlock txt = new TextBlock();
             txt.Text = text;
             txt.FontStyle = FontStyles.Normal;
             txt.FontFamily = new FontFamily(Font);
+            txt.Foreground = new SolidColorBrush(iColor);
             var formattedText = new FormattedText(text,CultureInfo.CurrentUICulture,FlowDirection.LeftToRight,
                 new Typeface(txt.FontFamily, txt.FontStyle, txt.FontWeight, txt.FontStretch),
-                txt.FontSize,Brushes.Black);
+                txt.FontSize,new SolidColorBrush(iColor));
             Canvas.SetTop(txt, y);
             Canvas.SetLeft(txt, x-(int)((double)formattedText.Width / (double)2));
             return txt;
@@ -508,11 +527,52 @@ namespace SchedulePlannerWPF {
         }
 
         private void Item_MouseLeave(object sender, MouseEventArgs e) {
-            ((Rectangle)sender).StrokeThickness = 2;
+            if(!GetItemByID(((Rectangle)sender).Name).IsSelected)((Rectangle)sender).StrokeThickness = 2;
+        }
+        bool StopMouseLeftButtonUp = false;
+        private void Item_MouseLeftButtonDown(object sender, MouseEventArgs e) {
+            ProductOrder SelectedItem = GetItemByID(((Rectangle)sender).Name);
+            if (!SelectedItem.IsSelected) {
+                oSel.Add(SelectedItem);
+                StopMouseLeftButtonUp = true;
+            }
+        }
+        private void Item_MouseLeftButtonUp(object sender, MouseEventArgs e) {
+            if (StopMouseLeftButtonUp) {
+                StopMouseLeftButtonUp = false;
+                return;
+            }
+            ProductOrder SelectedItem = GetItemByID(((Rectangle)sender).Name);
+            if (SelectedItem.IsSelected) {
+                oSel.Remove(SelectedItem);
+            }
         }
 
         private void button_Click(object sender, RoutedEventArgs e) {
 
+        }
+
+        public ProductOrder GetItemByID(string itemID) {
+            return (from mac in Machines
+                    from ord in mac.Ordens
+                    where ord.ItemID == itemID
+                    select ord).FirstOrDefault();
+        }
+
+        private void UserControl_MouseDown(object sender, MouseButtonEventArgs e) {
+            if (oSel.Items.Count==0) return;
+            foreach (ProductOrder item in oSel.Items) {
+                if (item.DrawnRect.IsMouseOver) return;
+            }
+            oSel.Clear();
+        }
+        protected override void OnMouseMove(MouseEventArgs e) {
+            if (e.LeftButton == MouseButtonState.Pressed) {
+                if (oSel.Items.Count == 0) return;
+                StopMouseLeftButtonUp = true;
+                oSel.Move(e.GetPosition(PanelItems));
+            }
+            base.OnMouseMove(e);
         }
     }
 }

@@ -18,17 +18,27 @@ namespace SchedulePlannerWPF {
         //public int Container;
         public string Equipamento;
         public int Index;
-        public bool IsSelected = false;
+
+        private bool isselected=false;
+        public bool IsSelected {
+            get { return isselected; }
+            set { isselected = value;
+                if (DrawnRect == null) return;
+                if (value) DrawnRect.StrokeThickness = 4; else DrawnRect.StrokeThickness = 2; }
+        }
+
+
         public int State;
         public string Text;
+        internal string ItemID;
 
         #endregion Fields
 
         #region Constructors
 
-        public ProductOrder(string iText, int iState, DateTime iDateStart, TimeSpan iDuration, int iIndex, string iEquipamento) {
+        public ProductOrder(string iItemID, string iText, int iState, DateTime iDateStart, TimeSpan iDuration, int iIndex, string iEquipamento) {
             IsSelected = false;
-            //Owner = iOwner;
+            ItemID = iItemID;
             Text = iText;
             State = iState;
             DateStart = iDateStart;
@@ -39,9 +49,9 @@ namespace SchedulePlannerWPF {
             Equipamento = iEquipamento;
         }
 
-        public ProductOrder(string iText, int iState, DateTime iDateStart, DateTime iDateEnd, int iIndex, string iEquipamento) {
+        public ProductOrder(string iItemID,string iText, int iState, DateTime iDateStart, DateTime iDateEnd, int iIndex, string iEquipamento) {
             IsSelected = false;
-            //Owner=iOwner;
+            ItemID = iItemID;
             Text = iText;
             State = iState;
             DateStart = iDateStart;

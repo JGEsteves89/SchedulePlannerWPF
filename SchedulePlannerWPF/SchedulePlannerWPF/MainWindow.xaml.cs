@@ -37,8 +37,8 @@ namespace SchedulePlannerWPF {
                 String Maq = iRow.Field<string>("Equipamento");
                 String txt = iRow.Field<object>("OPP").ToString() + ":" + iRow.Field<string>("CODARTIGO");
                 ProductOrder po = Cntrls.Find(x => x.Equipamento == Maq && x.DateStart == Ini);
-                if (po==null)Cntrls.Add(new ProductOrder(txt, 0, Ini, Fim, 0, Maq));
-                else  po.Text += "+" + txt;
+                if (po == null)Cntrls.Add(new ProductOrder(Maq + "_" + Cntrls.Count, txt, 0, Ini, Fim, 0, Maq));
+                else po.Text += "+" + txt;
             }
             foreach (ProductOrder po in Cntrls) {
                 Machine CurMac = oCal.Machines.Find(x => x.Name == po.Equipamento);
