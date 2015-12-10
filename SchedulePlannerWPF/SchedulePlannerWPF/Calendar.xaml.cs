@@ -539,6 +539,17 @@ namespace SchedulePlannerWPF {
         }
         private void Item_MouseLeftButtonUp(object sender, MouseEventArgs e) {
             if (StopMouseLeftButtonUp) {
+                if (oSel.Items.Count == 0) return;
+                Point Position = e.GetPosition(PanelCalendar);
+                Double PointX = viewPortX + (Double)(Position.X);
+                DateTime NewStart = StartDate.Add(new TimeSpan((long)(PointX / TickPixel)));
+                for (int i = 0; i < oSel.Items.Count; i++) {
+                    oSel.Items[i].DateStart = NewStart;
+                    oSel.Items[i].DateEnd = oSel.Items[i].DateStart.Add(oSel.Items[i].Duration);
+                    NewStart = NewStart.Add(oSel.Items[i].Duration).AddMinutes(1);
+                }
+                oSel.Clear();
+                oRefresh();
                 StopMouseLeftButtonUp = false;
                 return;
             }
