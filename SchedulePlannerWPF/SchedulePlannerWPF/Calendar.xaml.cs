@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace SchedulePlannerWPF {
     /// <summary>
@@ -21,14 +22,30 @@ namespace SchedulePlannerWPF {
     public partial class Calendar : UserControl {
         public Calendar() {
             InitializeComponent();
+
+            ItemContextMenu = new ContextMenu();
+            MenuItem Block = new MenuItem();
+            Block.Header = "Block";
+            Block.Click += new RoutedEventHandler(MenuBlock_Click);
+            ItemContextMenu = new ContextMenu();
+            MenuItem UnBlock = new MenuItem();
+            UnBlock.Header = "Unblock";
+            UnBlock.Click += new RoutedEventHandler(MenuUnBlock_Click);
+            MenuItem Delete = new MenuItem();
+            Delete.Header = "Delete";
+            Delete.Click += new RoutedEventHandler(MenuDelete_Click);
+            ItemContextMenu.Items.Add(Block);
+            ItemContextMenu.Items.Add(UnBlock);
+            ItemContextMenu.Items.Add(Delete);
+
             oSel = new Selection(this);
-            System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
+            DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
             dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
             dispatcherTimer.Start();
             oRefresh();
         }
-
+        public ContextMenu ItemContextMenu;
         public delegate void ChangedEventHandler(object sender, DateTime DateStart, DateTime DateEnd);
         public event ChangedEventHandler RangeChanged;
         protected virtual void OnRangeChanged(DateTime DateStart, DateTime DateEnd) {
@@ -38,6 +55,7 @@ namespace SchedulePlannerWPF {
         private long LowlDiv = new TimeSpan(0, 20, 0).Ticks;
         private long MedlDiv = new TimeSpan(1, 0, 0).Ticks;
         private long HighDiv = new TimeSpan(24, 0, 0).Ticks;
+        public Random random = new Random();
         public Line TimeLine1;
         public Line TimeLine2;
         private string MedFormat = "HH";
@@ -359,16 +377,32 @@ namespace SchedulePlannerWPF {
                     double Posf = Machines[i].Ordens[po].DateEnd.Subtract(StartDate).Ticks * TickPixel - viewPortX;
                     if ((Posi >= 0 && Posi <= 0 + viewPortWith) || ((Posi < 0 && Posf >= 0))) {
                         Machines[i].Ordens[po].DrawnRect = CreateFrameDivision(x0 + Posi, y0 + ItemSlack, Posf - Posi, yt - ItemSlack, 2, Colors.DimGray);
-                        Machines[i].Ordens[po].DrawnRect.Fill = new SolidColorBrush(Color.FromArgb(85, Colors.DimGray.R, Colors.DimGray.G, Colors.DimGray.B));
+                        if (Machines[i].Ordens[po].State == 1) {//planeado
+                            Machines[i].Ordens[po].DrawnRect.Fill = new SolidColorBrush(Color.FromArgb(85, Colors.LightBlue.R, Colors.LightBlue.G, Colors.LightBlue.B));
+                        } else if (Machines[i].Ordens[po].State == 2) {//bloqueado
+                            Machines[i].Ordens[po].DrawnRect.Fill = new SolidColorBrush(Color.FromArgb(85, Colors.RosyBrown.R, Colors.RosyBrown.G, Colors.RosyBrown.B));
+                        } else if (Machines[i].Ordens[po].State == 3) {//Paragem
+                            Machines[i].Ordens[po].DrawnRect.Fill = new SolidColorBrush(Color.FromArgb(85, Colors.LightSteelBlue.R, Colors.LightSteelBlue.G, Colors.LightSteelBlue.B));
+                        } else {//Paragem
+                            Machines[i].Ordens[po].DrawnRect.Fill = new SolidColorBrush(Color.FromArgb(85, Colors.DimGray.R, Colors.DimGray.G, Colors.DimGray.B));
+                        }
+
                         Machines[i].Ordens[po].DrawnRect.MouseEnter += new MouseEventHandler(Item_MouseEnter);
                         Machines[i].Ordens[po].DrawnRect.MouseLeave += new MouseEventHandler(Item_MouseLeave);
                         Machines[i].Ordens[po].DrawnRect.MouseLeftButtonDown += new MouseButtonEventHandler(Item_MouseLeftButtonDown);
                         Machines[i].Ordens[po].DrawnRect.MouseLeftButtonUp += new MouseButtonEventHandler(Item_MouseLeftButtonUp);
+                        Machines[i].Ordens[po].DrawnRect.MouseRightButtonUp += new MouseButtonEventHandler(Item_MouseRightButtonUp);
                         Machines[i].Ordens[po].DrawnRect.ToolTip = string.Format("{0}\nTipo: {2}\nEquipamento: {1}", Machines[i].Ordens[po].Text, Machines[i].Ordens[po].Equipamento, Machines[i].Ordens[po].GetState());
                         Machines[i].Ordens[po].DrawnRect.Name = Machines[i].Ordens[po].ItemID;
+
                         if (Machines[i].Ordens[po].IsSelected)
                             Machines[i].Ordens[po].DrawnRect.StrokeThickness = 4;
                         PanelItems.Children.Add(Machines[i].Ordens[po].DrawnRect);
+                        if (Machines[i].Ordens[po].State == 1) {
+                            Canvas.SetZIndex(Machines[i].Ordens[po].DrawnRect, PanelItems.Children.Count - 1);
+                        } else {
+                            Canvas.SetZIndex(Machines[i].Ordens[po].DrawnRect, 0);
+                        }
                     }
                 }
                 y0 = PanelCalendar.Margin.Top + (i) * MachineHeaderHeight + DayHeaderSize + HourHeaderSize;
@@ -527,40 +561,46 @@ namespace SchedulePlannerWPF {
         }
 
         private void Item_MouseLeave(object sender, MouseEventArgs e) {
-            if(!GetItemByID(((Rectangle)sender).Name).IsSelected)((Rectangle)sender).StrokeThickness = 2;
+            if (GetItemByID(((Rectangle)sender).Name) == null) return;
+            if (!GetItemByID(((Rectangle)sender).Name).IsSelected) ((Rectangle)sender).StrokeThickness = 2;
         }
         bool StopMouseLeftButtonUp = false;
+        bool MouseIsMoving = false;
         private void Item_MouseLeftButtonDown(object sender, MouseEventArgs e) {
+            MouseIsMoving = false;
             ProductOrder SelectedItem = GetItemByID(((Rectangle)sender).Name);
-            if (!SelectedItem.IsSelected) {
+            if (SelectedItem == null) return;
+            if (!SelectedItem.IsSelected && SelectedItem.State==1) {
                 oSel.Add(SelectedItem);
                 StopMouseLeftButtonUp = true;
             }
         }
         private void Item_MouseLeftButtonUp(object sender, MouseEventArgs e) {
             if (StopMouseLeftButtonUp) {
-                if (oSel.Items.Count == 0) return;
-                Point Position = e.GetPosition(PanelCalendar);
-                Double PointX = viewPortX + (Double)(Position.X);
-                DateTime NewStart = StartDate.Add(new TimeSpan((long)(PointX / TickPixel)));
-                for (int i = 0; i < oSel.Items.Count; i++) {
-                    oSel.Items[i].DateStart = NewStart;
-                    oSel.Items[i].DateEnd = oSel.Items[i].DateStart.Add(oSel.Items[i].Duration);
-                    NewStart = NewStart.Add(oSel.Items[i].Duration).AddMinutes(1);
-                }
-                oSel.Clear();
-                oRefresh();
                 StopMouseLeftButtonUp = false;
                 return;
             }
             ProductOrder SelectedItem = GetItemByID(((Rectangle)sender).Name);
+            if (SelectedItem == null) return;
             if (SelectedItem.IsSelected) {
                 oSel.Remove(SelectedItem);
             }
         }
-
+        private void Item_MouseRightButtonUp(object sender, MouseEventArgs e) {
+            ProductOrder SelectedItem = GetItemByID(((Rectangle)sender).Name);
+            if (SelectedItem == null) return;
+            if (!SelectedItem.IsSelected && (SelectedItem.State == 1|| SelectedItem.State == 2)) {
+                oSel.Add(SelectedItem);
+            }
+            if (oSel.Items.Count == 0) return;
+            ItemContextMenu.IsOpen = true;
+        }
         private void button_Click(object sender, RoutedEventArgs e) {
-
+            if (Machines.Count == 0) return;
+            int randomNumber = random.Next(0, 8);
+            ProductOrder NewOrder = new ProductOrder(Machines[0].Name + "_" + Machines[0].Ordens.Count, "Tonto", 1, StartDate, StartDate.AddHours(randomNumber), Machines[0].Ordens.Count, Machines[0].Name);
+            Machines[0].Ordens.Add(NewOrder);
+            oRefresh();
         }
 
         public ProductOrder GetItemByID(string itemID) {
@@ -579,11 +619,132 @@ namespace SchedulePlannerWPF {
         }
         protected override void OnMouseMove(MouseEventArgs e) {
             if (e.LeftButton == MouseButtonState.Pressed) {
+                for (int i = 0; i < oSel.Items.Count; i++) {
+                    if (oSel.Items[i].State != 1) {
+                        oSel.Remove(oSel.Items[i]);
+                        i = i - 1;
+                    }
+                }
                 if (oSel.Items.Count == 0) return;
                 StopMouseLeftButtonUp = true;
                 oSel.Move(e.GetPosition(PanelItems));
+                MouseIsMoving = true;
             }
             base.OnMouseMove(e);
+        }
+        void RemoveOTFromMachine(string IDMac,string IDPo) {
+            for (int i = 0; i < Machines.Count; i++) {
+                if (IDMac == Machines[i].Name) {
+                    for (int j = 0; j < Machines[i].Ordens.Count; j++) {
+                        if(Machines[i].Ordens[j].ItemID== IDPo) {
+                            Machines[i].Ordens.Remove(Machines[i].Ordens[j]);
+                            Machines[i].RecalcID();
+                           return;
+                        }
+                    }
+                }
+            }
+        }
+        void SortPlanned(string IDMac) {
+            bool HasChanged = false;
+            for (int i = 0; i < Machines.Count; i++) {
+                if (IDMac == Machines[i].Name) {
+                    Machines[i].SortOrders();
+                    for (int j = 0; j < Machines[i].Ordens.Count-1; j++) {
+                        HasChanged = false;
+                        for (int t = j+1; t < Machines[i].Ordens.Count; t++) {
+                            if (Machines[i].Ordens[t].State == 1 || Machines[i].Ordens[j].State == 1) {
+                                if (Machines[i].Ordens[j].DateStart <= Machines[i].Ordens[t].DateStart &&
+                                    Machines[i].Ordens[j].DateEnd > Machines[i].Ordens[t].DateStart) {
+                                    if (Machines[i].Ordens[t].State == 1) {
+                                        Machines[i].Ordens[t].DateStart = Machines[i].Ordens[j].DateEnd.AddMinutes(1);
+                                        Machines[i].Ordens[t].DateEnd = Machines[i].Ordens[t].DateStart.Add(Machines[i].Ordens[t].Duration);
+                                    } else {
+                                        ProductOrder Aux = Machines[i].Ordens[j];
+                                        Machines[i].Ordens[j] = Machines[i].Ordens[t];
+                                        Machines[i].Ordens[t] = Aux;
+                                        Machines[i].Ordens[t].DateStart = Machines[i].Ordens[j].DateEnd.AddMinutes(1);
+                                        Machines[i].Ordens[t].DateEnd = Machines[i].Ordens[t].DateStart.Add(Machines[i].Ordens[t].Duration);
+                                    }
+                                    HasChanged = true;
+                                    //Machines[i].SortOrders();
+                                }
+                            }
+                        }
+                        if (HasChanged) {
+                            oRefresh();
+                            Application.Current.Dispatcher.Invoke(DispatcherPriority.Background, new Action(delegate { }));
+                        }
+                    }
+                    Machines[i].RecalcID();
+                    return;
+                }
+            }
+        }
+        private void UserControl_MouseUp(object sender, MouseButtonEventArgs e) {
+            if (oSel.Items.Count == 0) return;
+            if (MouseIsMoving) {
+                Point Position = e.GetPosition(PanelCalendar);
+                Point point = e.GetPosition(PanelItems);
+                foreach (Machine iMac in Machines) {
+                    if (point.Y >= Canvas.GetTop(iMac.DrawnRect) && point.Y < Canvas.GetTop(iMac.DrawnRect) + iMac.DrawnRect.Height) {
+                        Double PointX = viewPortX + (Double)(Position.X);
+                        DateTime NewStart = StartDate.Add(new TimeSpan((long)(PointX / TickPixel)));
+                        //if (NewStart >= DateTime.Now) {
+                        for (int i = 0; i < oSel.Items.Count; i++) {
+                            RemoveOTFromMachine(oSel.Items[i].Equipamento, oSel.Items[i].ItemID);
+                        }
+                        for (int i = oSel.Items.Count-1; i >= 0; i--) {
+                            oSel.Items[i].DateStart = NewStart;
+                            oSel.Items[i].DateEnd = oSel.Items[i].DateStart.Add(oSel.Items[i].Duration);
+                            oSel.Items[i].Equipamento = iMac.Name;
+                            oSel.Items[i].ItemID = iMac.Name + "_" + iMac.Ordens.Count;
+                            oSel.Items[i].DrawnRect.Name = iMac.Name + "_" + iMac.Ordens.Count;
+                            iMac.Ordens.Add(oSel.Items[i]);
+                            NewStart = NewStart.AddMilliseconds(-1);
+                            SortPlanned(iMac.Name);
+                        }
+                        SortPlanned(iMac.Name);
+                        //oSel.Clear();
+                        //}
+                    }
+                }
+                oRefresh();
+            }
+            StopMouseLeftButtonUp = false;
+            MouseIsMoving = false;
+        }
+
+        private void MenuDelete_Click(object sender, RoutedEventArgs e) {
+            if (oSel.Items.Count == 0) return;
+            foreach (ProductOrder item in oSel.Items) {
+                if (item.State == 1) {
+                    RemoveOTFromMachine(item.Equipamento, item.ItemID);
+                }
+            }
+            oSel.Clear();
+            oRefresh();
+        }
+
+        private void MenuBlock_Click(object sender, RoutedEventArgs e) {
+            if (oSel.Items.Count == 0) return;
+            for (int i = 0; i < oSel.Items.Count; i++) {
+                if (oSel.Items[i].State == 1) {
+                    oSel.Items[i].State = 2;
+                }
+            }
+            oSel.Clear();
+            oRefresh();
+        }
+        private void MenuUnBlock_Click(object sender, RoutedEventArgs e) {
+            if (oSel.Items.Count == 0) return;
+            for (int i = 0; i < oSel.Items.Count; i++) {
+                if (oSel.Items[i].State == 2) {
+                    oSel.Items[i].State = 1;
+                }
+            }
+            oSel.Clear();
+            oRefresh();
         }
     }
 }

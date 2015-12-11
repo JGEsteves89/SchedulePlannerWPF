@@ -22,6 +22,26 @@ namespace SchedulePlannerWPF {
             Ordens = new List<ProductOrder>();
         }
 
+        public void SortOrders() {
+            ProductOrder Aux =null;
+            for (int i = 0; i < Ordens.Count-1; i++) {
+                for (int j = i+1; j < Ordens.Count; j++) {
+                    if (Ordens[i].DateStart> Ordens[j].DateStart ) {
+                        Aux = Ordens[i];
+                        Ordens[i] = Ordens[j];
+                        Ordens[j] = Aux;
+                    }
+                }
+            }
+            RecalcID();
+       }
+
+        internal void RecalcID() {
+            for (int t = 0; t < Ordens.Count; t++) {
+                Ordens[t].ItemID = Name + "_" + t;
+                Ordens[t].DrawnRect.Name = Name + "_" + t;
+            }
+        }
         #endregion Constructors
     }
 }

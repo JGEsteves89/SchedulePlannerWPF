@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:SchedulePlannerWPF"
-             mc:Ignorable="d" Height="325.424" Width="499.032" Loaded="UserControl_Loaded" MouseWheel="UserControl_MouseWheel" SizeChanged="UserControl_SizeChanged" MouseDown="UserControl_MouseDown">
+             mc:Ignorable="d" Height="325.424" Width="499.032" Loaded="UserControl_Loaded" MouseWheel="UserControl_MouseWheel" SizeChanged="UserControl_SizeChanged" MouseDown="UserControl_MouseDown" MouseUp="UserControl_MouseUp">
     <UserControl.Resources>
         <Storyboard x:Key="OnMouseEnter1">
             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Background).(SolidColorBrush.Color)" Storyboard.TargetName="textBlock">

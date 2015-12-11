@@ -46,6 +46,7 @@ namespace SchedulePlannerWPF {
                     CurMac = new Machine(po.Equipamento);
                     oCal.Machines.Add(CurMac);
                 }
+                po.ItemID = CurMac.Name + "_" + CurMac.Ordens.Count;
                 CurMac.Ordens.Add(po);
             }
             oCal.oRefresh();

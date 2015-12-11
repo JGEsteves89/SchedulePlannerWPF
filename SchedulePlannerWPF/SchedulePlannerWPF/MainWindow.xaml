@@ -7,6 +7,9 @@
         mc:Ignorable="d"
         Title="SCHEDULE PLANNER WPF DEMO" Height="558.28" Width="1141.271" Loaded="Window_Loaded">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
         <local:Calendar x:Name="oCal" Width="Auto" Height="Auto" >
             <local:Calendar.Background>
                 <RadialGradientBrush>
